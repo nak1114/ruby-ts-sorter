@@ -1,0 +1,20 @@
+GIT
+  remote: git://github.com/nak1114/ariblib.git
+  revision: 57202559cce15013b1b13e78715c8dd91a092209
+  specs:
+    ariblib (0.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    levenshtein (0.2.2)
+
+PLATFORMS
+  x86-mingw32
+
+DEPENDENCIES
+  ariblib!
+  levenshtein
+
+BUNDLED WITH
+   1.15.1
