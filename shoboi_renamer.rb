@@ -28,6 +28,7 @@ class ShoboiRenamer
     @logger = logger
     @ChID=self.get_ch
     ServiceName.merge!(local) if local
+    @Cache={}
   end
   
   def curl(url)
@@ -113,7 +114,7 @@ class ShoboiRenamer
       count   =doc.elements['/ProgLookupResponse/ProgItems/ProgItem/Count'].text.to_i
       subtitle=doc.elements['/ProgLookupResponse/ProgItems/ProgItem/STSubTitle'].text
       q2="http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=#{tid}"
-      doc=curl(q2)
+      doc = @Cache[tid] || curl(q2)
       response =doc.elements['/TitleLookupResponse/Result/Code'].text.to_i
       message  =doc.elements['/TitleLookupResponse/Result/Message'].text
       if response != 200
@@ -124,6 +125,7 @@ class ShoboiRenamer
           "query2:#{q2}"
         next
       end
+      @Cache[tid] = doc unless @Cache[tid]
       title    =doc.elements['/TitleLookupResponse/TitleItems/TitleItem/Title'].text
       subtitles=doc.elements['/TitleLookupResponse/TitleItems/TitleItem/SubTitles'].text || ""
       #p subtitles
