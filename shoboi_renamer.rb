@@ -21,13 +21,13 @@ end
 
 class ShoboiRenamer
   FlgRename=true
-  ServiceName=Hash.new{|h,k| h[k]=k}
   RecMargin=Rational(2,24*60)
 
   def initialize(local=nil,logger=nil)
     @logger = logger
-    @ChID=self.get_ch
-    ServiceName.merge!(local) if local
+    @ChID=get_ch
+    @ServiceName=Hash.new{|h,k| h[k]=k}
+    @ServiceName.merge!(local) if local
     @Cache={}
   end
   
@@ -44,9 +44,6 @@ class ShoboiRenamer
       name=v.text('./ChName')
       chid=v.text('./ChID')
       h[name]=chid.to_i
-      #name=v.get_text('./ChName').to_s
-      #str=v.get_elements('./ChiEPGName')[0].text
-      #p str if str
     end
     h
   end
@@ -60,8 +57,7 @@ class ShoboiRenamer
     @logger.info str if @logger
   end
 
-  def rename_title(dir_name)
-    Dir.glob(dir_name.gsub("\\",'/')+'/*.ts') do |fname|
+  def parse_ts_file(fname)
       ts = Ariblib::TransportStreamFile.new(fname,{
         0x0014 => Ariblib::TimeOffsetTable.new,
         0x0010 => Ariblib::NetworkInformationTable.new,
@@ -90,10 +86,16 @@ class ShoboiRenamer
         break unless ts.transport_packet
       end
       ts.close
-      name=name.tr("０-９Ａ-Ｚａ-ｚ　", "0-9A-Za-z ")
+      [name.tr("０-９Ａ-Ｚａ-ｚ　", "0-9A-Za-z "),time]
+  end
+
+  def rename_title(dir_name)
+    Dir.glob(dir_name.gsub("\\",'/')+'/*.ts') do |fname|
+      name,time=parse_ts_file(fname)
 
 #      ch=fname[/\[(.*?)\]/ , 1]
-      dis=@ChID[ServiceName[name]]
+      ch=@ServiceName[name]
+      dis=@ChID[ch]
       unless dis
         error "Can't get program data."+
             " file:#{fname}\n"+
@@ -128,10 +130,6 @@ class ShoboiRenamer
       @Cache[tid] = doc unless @Cache[tid]
       title    =doc.elements['/TitleLookupResponse/TitleItems/TitleItem/Title'].text
       subtitles=doc.elements['/TitleLookupResponse/TitleItems/TitleItem/SubTitles'].text || ""
-      #p subtitles
-      #p count
-      #p q1
-      #p q2
       stitle   =subtitles.scan(/\*0*(\d+)\*([^\n]+)/).assoc(count.to_s)
       unless stitle
         error "***not found***\n"+
@@ -142,7 +140,7 @@ class ShoboiRenamer
           "query2:#{q2}"
         next
       end
-      str="#{File.dirname(fname)}/#{title.to_file} [#{ServiceName[name]}]_第#{format('%02d',count)}話 「#{stitle[1].to_file}」.ts"
+      str="#{File.dirname(fname)}/#{title.to_file} [#{ch.to_file}]_第#{format('%02d',count)}話 「#{stitle[1].to_file}」.ts"
       if FlgRename and not File.exist?(str.to_win)
         info "renamed:\nsrc:#{fname}\ndst:#{str}"
         File.rename(fname.to_win,str.to_win)
