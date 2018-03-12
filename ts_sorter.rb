@@ -39,6 +39,7 @@ class TsSorter
         %("#{datetime}"\t#{severity}\t"#{message}"\n)
     }
     make_dirnames
+    @renamer=nil
   end
   
   def make_dirnames
@@ -76,8 +77,12 @@ class TsSorter
     self
   end
 
+  def renamer
+    @renamer||=ShoboiRenamer.new(ServiceName,@logger)
+    @renamer
+  end
   def check_final
-    renamer=ShoboiRenamer.new(ServiceName,@logger)
+    #renamer=ShoboiRenamer.new(ServiceName,@logger)
     current=[]
     moved=[]
     @dir_names.zip(@org_names).each do |dirname,orgname|
