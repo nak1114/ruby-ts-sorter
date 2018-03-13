@@ -43,8 +43,14 @@ class TsSorter
   end
   
   def make_dirnames
-    @org_names= File.readlines(CurrentFile,encoding: 'utf-8')
-    @dir_names= @org_names.map{|v| v.sub(/[　 \r\n\t]*(\[.*\]_第\d+話.*)?$/,'').sub(/^[　 \r\n\t]*/,'').strip }.delete_if{|v| v==''}
+    org_names= File.readlines(CurrentFile,encoding: 'utf-8')
+    @dir_names=org_names
+      .map{|v| 
+        v.sub(/[　 \r\n\t]*(\[.*\]_第\d+話.*)?$/,'')
+        .sub(/^[　 \r\n\t]*/,'').strip 
+      }
+      .zip(org_names)
+      .delete_if{|v| v[0]==''}
   end
   def error(str)
     puts str
@@ -58,7 +64,7 @@ class TsSorter
   def sort
     Dir.glob(UnsortDir+'*.ts').each do |filename|
       basename=File.basename(filename).sub(/[　 \r\n\t]*\[.*\]_第\d+話.*$/,'')
-      score,dirname=@dir_names.inject([0.5,nil])do|ret,dirname|
+      score,dirname=@dir_names.map{|v|v[0]}.inject([0.5,nil])do|ret,dirname|
         score=Levenshtein.normalized_distance(basename,dirname)
         (score<ret[0]) ? [score,dirname] : ret
       end
@@ -85,7 +91,7 @@ class TsSorter
     #renamer=ShoboiRenamer.new(ServiceName,@logger)
     current=[]
     moved=[]
-    @dir_names.zip(@org_names).each do |dirname,orgname|
+    @dir_names.each do |dirname,orgname|
       flg_moded=false
       path=SortedDir+dirname
       mv_dirname=RenameDir+dirname
