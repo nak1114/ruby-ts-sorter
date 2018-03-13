@@ -88,11 +88,10 @@ class TsSorter
     @renamer
   end
   def check_final
-    #renamer=ShoboiRenamer.new(ServiceName,@logger)
     current=[]
     moved=[]
     @dir_names.each do |dirname,orgname|
-      flg_moded=false
+      current << "#{orgname}"
       path=SortedDir+dirname
       mv_dirname=RenameDir+dirname
       if Dir.exist?(path)
@@ -108,17 +107,12 @@ class TsSorter
           else
             renamer.rename_title(path)
             FileUtils.mv(path,mv_dirname)
-            flg_moded=true
+            moved << "#{Time.now}\t#{currnet.pop}"
          end
         end
       else
           info "移動済\t#{dirname}"
-          flg_moded=true
-      end
-      if flg_moded
-        moved << "#{Time.now}\t#{orgname}"
-      else
-        current << "#{orgname}"
+          moved << "#{Time.now}\t#{currnet.pop}"
       end
     end
     if moved.size > 0
