@@ -68,7 +68,7 @@ class TsSorter
         path=SortedDir+dirname
         Dir.mkdir(path) unless Dir.exist?(path)
         FileUtils.mv(filename,path)
-        FileUtils.rm(filename+'.meta')
+        FileUtils.rm(filename+'.meta') if File.exist?(filename+'.meta')
         info mes
       else
         @logger.debug mes
