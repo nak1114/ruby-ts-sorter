@@ -73,9 +73,13 @@ class TsSorter
       if dirname then
         path=SortedDir+dirname
         Dir.mkdir(path) unless Dir.exist?(path)
-        FileUtils.mv(filename,path)
-        FileUtils.rm(filename+'.meta') if File.exist?(filename+'.meta')
-        info mes
+        begin
+          FileUtils.mv(filename,path)
+          FileUtils.rm(filename+'.meta') if File.exist?(filename+'.meta')
+          info mes
+        rescue => e
+          puts "#{e.message}:#{filename}"
+        end
       else
         @logger.debug mes
       end
@@ -107,12 +111,12 @@ class TsSorter
           else
             renamer.rename_title(path)
             FileUtils.mv(path,mv_dirname)
-            moved << "#{Time.now}\t#{currnet.pop}"
+            moved << "#{Time.now}\t#{current.pop}"
          end
         end
       else
           info "移動済\t#{dirname}"
-          moved << "#{Time.now}\t#{currnet.pop}"
+          moved << "#{Time.now}\t#{current.pop}"
       end
     end
     if moved.size > 0
